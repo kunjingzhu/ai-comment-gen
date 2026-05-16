@@ -1,0 +1,126 @@
+{
+  "name": "ai-comment-gen",
+  "displayName": "AI 注释生成器",
+  "description": "选中代码，AI一键生成注释 —— 支持 JS/TS/React/Vue",
+  "version": "0.1.0",
+  "publisher": "kunjingzhu",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Formatters",
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "AI",
+    "comment",
+    "注释",
+    "code comment",
+    "deepseek"
+  ],
+  "icon": "icon.png",
+  "activationEvents": [],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ai-comment-gen.addComment",
+        "title": "AI 生成注释"
+      },
+      {
+        "command": "ai-comment-gen.addCommentDetailed",
+        "title": "AI 生成详细注释（JSDoc）"
+      },
+      {
+        "command": "ai-comment-gen.addFileComments",
+        "title": "AI 为整个文件添加注释"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "ai-comment-gen.addComment",
+          "group": "ai-comment@1",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ai-comment-gen.addCommentDetailed",
+          "group": "ai-comment@2",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ai-comment-gen.addFileComments",
+          "group": "ai-comment@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ai-comment-gen.addComment",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ai-comment-gen.addCommentDetailed",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "ai-comment-gen.addFileComments"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI 注释生成器",
+      "properties": {
+        "aiCommentGen.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "DeepSeek API Key（必填）"
+        },
+        "aiCommentGen.apiUrl": {
+          "type": "string",
+          "default": "https://api.deepseek.com/v1/chat/completions",
+          "description": "AI API 地址"
+        },
+        "aiCommentGen.model": {
+          "type": "string",
+          "default": "deepseek-chat",
+          "description": "AI 模型名称"
+        },
+        "aiCommentGen.locale": {
+          "type": "string",
+          "default": "zh-CN",
+          "enum": [
+            "zh-CN",
+            "en"
+          ],
+          "description": "注释语言（中文/英文）"
+        },
+        "aiCommentGen.style": {
+          "type": "string",
+          "default": "concise",
+          "enum": [
+            "concise",
+            "detailed"
+          ],
+          "description": "注释风格（简洁/详细）"
+        },
+        "aiCommentGen.autoCommentOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "保存文件时自动为函数生成注释（需要先设置 API Key）"
+        },
+        "aiCommentGen.batchLimit": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "整文件分析时一次最多注释的函数数量"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.120.0"
+  }
+}
