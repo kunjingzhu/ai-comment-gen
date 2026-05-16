@@ -32,7 +32,7 @@
 
 ### 手动安装
 
-1. 下载 [最新 .vsix](https://github.com/1552394362/ai-comment-gen/releases)
+1. 即将上架 VSCode 插件商店
 2. VSCode → 扩展 → 右上角 `...` → 从 VSIX 安装
 
 ## 🚀 使用
