@@ -2,7 +2,7 @@
   "name": "ai-comment-gen",
   "displayName": "AI 注释生成器",
   "description": "选中代码，AI一键生成注释 —— 支持 JS/TS/React/Vue",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "kunjingzhu",
   "repository": {
     "type": "git",
