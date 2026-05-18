@@ -5,6 +5,7 @@
 [![VSCode](https://img.shields.io/badge/VSCode-1.85+-007ACC?logo=visualstudiocode)](https://code.visualstudio.com/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.8-blue)](https://github.com/kunjingzhu/ai-comment-gen/releases)
+[![Stars](https://img.shields.io/github/stars/kunjingzhu/ai-comment-gen?style=social)](https://github.com/kunjingzhu/ai-comment-gen)
 [![DeepSeek](https://img.shields.io/badge/AI-DeepSeek-4F46E5)](https://deepseek.com)
 
 ## ✨ 功能
@@ -94,5 +95,10 @@
 [朱景坤](https://github.com/kunjingzhu) - 10 年前端开发者
 
 ---
+
+## 相关文章
+
+- [📖 掘金：10年前端，用AI 1天做了个VSCode插件，自动写注释太香了](https://juejin.cn/post/7640755033009881129)
+- [💬 知乎：有哪些让你惊艳的 VSCode 插件？](https://www.zhihu.com/question/403958691/answer/2039724907291006157)
 
 如果觉得有用，欢迎 Star 支持！
