@@ -1,16 +1,8 @@
-{
-  "name": "ai-comment-gen",
-  "version": "0.1.0",
-  "description": "AI Comment Generator",
-  "main": "src/extension.js",
-  "scripts": {
-    "lint": "echo 'no lint yet'",
-    "pretest": "echo 'no test yet'"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.85.0"
-  },
-  "engines": {
-    "vscode": "^1.85.0"
-  }
-}
+.gitignore
+.gitattributes
+**/*.vsix
+**/*.md~
+**/node_modules/**
+articles/**
+content-plan.md
+release-body.json
