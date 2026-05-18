@@ -2,7 +2,8 @@
 
 > 选中代码，右键一键 AI 生成注释。支持 JS/TS/React/Vue/CSS/Python。
 
-[![VSCode](https://img.shields.io/badge/VSCode-1.85+-007ACC?logo=visualstudiocode)](https://code.visualstudio.com/)
+[![VSCode](https://img.shields.io/badge/VS_Code_Plugin-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=kunjingzhu.ai-comment-gen)
+[![Installs](https://img.shields.io/badge/dynamic/json?label=installs&query=install&url=https%3A%2F%2Fvsmarketplacebadge.dev%2Fapi%2Finstalls%2Fkunjingzhu.ai-comment-gen&color=brightgreen)](https://marketplace.visualstudio.com/items?itemName=kunjingzhu.ai-comment-gen)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.8-blue)](https://github.com/kunjingzhu/ai-comment-gen/releases)
 [![Stars](https://img.shields.io/github/stars/kunjingzhu/ai-comment-gen?style=social)](https://github.com/kunjingzhu/ai-comment-gen)
@@ -29,11 +30,13 @@
 
 ## 安装
 
-### 从 VSCode 插件商店安装（即将上架）
+### 从 VSCode 插件商店安装（推荐）
+
+[![VSCode 商店](https://img.shields.io/badge/Install_in_VSCode-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=kunjingzhu.ai-comment-gen)
 
 搜索 `AI 注释生成器` 或 `ai-comment-gen`。
 
-### 手动安装（推荐）
+### 手动安装（备选）
 
 1. 下载最新 `.vsix` 文件：
    - [GitHub Releases](https://github.com/kunjingzhu/ai-comment-gen/releases) → 下载最新的 `ai-comment-gen-x.x.x.vsix`
@@ -100,5 +103,9 @@
 
 - [📖 掘金：10年前端，用AI 1天做了个VSCode插件，自动写注释太香了](https://juejin.cn/post/7640755033009881129)
 - [💬 知乎：有哪些让你惊艳的 VSCode 插件？](https://www.zhihu.com/question/403958691/answer/2039724907291006157)
+
+## 商店直达
+
+[![VSCode 商店](https://img.shields.io/badge/VS_Code_Marketplace-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=kunjingzhu.ai-comment-gen)
 
 如果觉得有用，欢迎 Star 支持！
