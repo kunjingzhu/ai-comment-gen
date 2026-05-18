@@ -2,8 +2,12 @@
   "name": "ai-comment-gen",
   "displayName": "AI 注释生成器",
   "description": "选中代码，AI一键生成注释 —— 支持 JS/TS/React/Vue",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "publisher": "kunjingzhu",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kunjingzhu/ai-comment-gen.git"
+  },
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
@@ -20,8 +24,7 @@
     "code comment",
     "deepseek"
   ],
-  "icon": "icon.png",
-  "activationEvents": [],
+  "activationEvents": ["onLanguage:javascript", "onLanguage:typescript", "onLanguage:python"],
   "main": "./src/extension.js",
   "contributes": {
     "commands": [
@@ -121,6 +124,6 @@
     }
   },
   "devDependencies": {
-    "@types/vscode": "^1.120.0"
+    "@types/vscode": "^1.85.0"
   }
 }

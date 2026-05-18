@@ -61,8 +61,10 @@ async function handleSelectionComment(style) {
         const comment = await generateComment(prompt, config);
         if (!comment) return vscode.window.showErrorMessage('AI 未能生成注释');
 
+        // 将注释插入到选中区域的正上方一行
+        const insertLine = new vscode.Position(selection.start.line, 0);
         await editor.edit((editBuilder) => {
-          editBuilder.insert(selection.start, formatComment(comment, language, style));
+          editBuilder.insert(insertLine, formatComment(comment, language, style));
         });
         vscode.window.showInformationMessage('✅ 注释已生成');
       } catch (err) {
@@ -101,7 +103,7 @@ async function handleFileComment(isAutoSave = false) {
         const language = document.languageId;
         const lines = fullText.split('\n');
 
-        // 找出还没有注释的函数/方法（简单启发式：找到 function / def / const xxx = 开头的行）
+        // 找出还没有注释的函数/方法
         const candidates = [];
         const commentPattern = /^\s*(\/\/|#|\/\*|<!--|""")/;
 
@@ -111,8 +113,16 @@ async function handleFileComment(isAutoSave = false) {
           if (!line || commentPattern.test(line)) continue;
           if (/^(import|export|from|require|package|using)/.test(line)) continue;
           if (/^[{\[\]})]/.test(line)) continue;
+          // 跳过：if/else/for/while/return/switch/case/try/catch/function(匿名)/箭头函数参数等
+          if (/^(if|else|for|while|return|switch|case|try|catch|finally|break|continue|throw|new|typeof|delete|void|yield|await|async|static|get|set)\b/.test(line)) continue;
+          // 跳过回调函数（前一行不是空行且缩进较深）
+          if (/^function\s*\(/.test(line) && i > 0 && lines[i-1].trim() !== '') continue;
+          // 跳过只有括号和箭头函数参数的行，如 (str, a, b) =>
+          if (/^\([^)]*\)\s*=>/.test(line)) continue;
+          // 跳过字符串和正则开头的行
+          if (/^['"`/]/.test(line)) continue;
 
-          // 匹配函数/方法定义
+          // 匹配函数/方法定义（排除了控制流语句、回调等）
           if (
             /^(export\s+)?(async\s+)?function\s+\w/.test(line) ||
             /^(export\s+)?(async\s+)?const\s+\w+\s*=/.test(line) ||
@@ -143,9 +153,13 @@ async function handleFileComment(isAutoSave = false) {
         for (const c of batch) {
           const prompt = buildSelectionPrompt(c.text, language, 'detailed', config);
           try {
-            const comment = await generateComment(prompt, config);
+            let comment = await generateComment(prompt, config);
             if (comment) {
-              edits.push({ lineNum: c.lineNum, comment: formatComment(comment, language, 'detailed') });
+              // 清理 AI 返回中可能混入的代码内容（只保留注释部分）
+              comment = cleanCommentOnly(comment);
+              if (comment) {
+                edits.push({ lineNum: c.lineNum, comment: formatComment(comment, language, 'detailed') });
+              }
             }
           } catch {
             // 单个失败不影响其他的
@@ -217,7 +231,7 @@ function buildSelectionPrompt(code, language, style, config) {
   return `${isZh ? '你是一个资深前端工程师，请为以下代码生成注释。' : 'You are a senior frontend engineer. Generate comments for the following code.'}
 ${styleDesc}
 ${langHint}
-${isZh ? '只返回注释内容，不要多余的解释。用' : 'Return only the comment, no extra explanation. Use'} ${isZh ? '中文' : 'English'}
+${isZh ? '只返回注释内容，不要多余的解释，不要用 markdown 代码块包裹。用' : 'Return only the comment, no extra explanation, do NOT wrap it in markdown code blocks. Use'} ${isZh ? '中文' : 'English'}
 
 \`\`\`${language}
 ${code}
@@ -227,36 +241,139 @@ ${code}
 // ──────────────────── 格式化注释 ────────────────────
 
 function formatComment(comment, language, style) {
-  if (comment.startsWith('//') || comment.startsWith('/*') || comment.startsWith('#') || comment.startsWith('<!--') || comment.startsWith('"""')) {
-    return comment + '\n';
+  let text = comment.trim();
+
+  // 清理 AI 返回时可能带的 markdown 代码块包裹
+  text = text.replace(/^```\w*\s*\n?/gm, '').replace(/\n?```\s*$/gm, '').trim();
+
+  // 如果 AI 返回的内容以注释开头但后面混入了代码，只提取注释部分
+  if (text.startsWith('/*') || text.startsWith('//') || text.startsWith('#') || text.startsWith('<!--') || text.startsWith('"""')) {
+    // 检查是否混入了代码（注释结束之后还有非空行不是注释）
+    const cleaned = extractCommentBlock(text, language);
+    if (cleaned !== text) {
+      // 混入了代码，只取注释部分
+      return cleaned + '\n';
+    }
+    return text + '\n';
   }
 
-  if (['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(language)) {
-    if (style === 'detailed' || comment.includes('@param') || comment.includes('@returns')) {
-      return '/**\n * ' + comment.split('\n').join('\n * ') + '\n */\n';
+  const lines = text.split('\n').filter(l => l.trim());
+
+  if (lines.length > 1) {
+    if (['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(language)) {
+      if (style === 'detailed') {
+        return '/**\n * ' + lines.join('\n * ') + '\n */\n';
+      }
+      return lines.map(l => '// ' + l).join('\n') + '\n';
     }
-    return '// ' + comment.trim() + '\n';
+    if (['python', 'ruby'].includes(language)) {
+      if (style === 'detailed') {
+        return '"""\n' + text + '\n"""\n';
+      }
+      return lines.map(l => '# ' + l).join('\n') + '\n';
+    }
+    if (['css', 'scss', 'less', 'sass'].includes(language)) {
+      if (style === 'detailed') {
+        return '/*\n * ' + lines.join('\n * ') + '\n */\n';
+      }
+      return lines.map(l => '/* ' + l + ' */').join('\n') + '\n';
+    }
+    if (['html', 'xml', 'svg', 'vue'].includes(language)) {
+      return lines.map(l => '<!-- ' + l + ' -->').join('\n') + '\n';
+    }
+    return lines.map(l => '// ' + l).join('\n') + '\n';
+  }
+
+  const line = lines[0] || text;
+
+  if (['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(language)) {
+    if (style === 'detailed' || line.includes('@param') || line.includes('@returns')) {
+      return '/**\n * ' + line + '\n */\n';
+    }
+    return '// ' + line + '\n';
   }
 
   if (['python', 'ruby'].includes(language)) {
-    if (style === 'detailed' || comment.includes(':param') || comment.includes(':return')) {
-      return '"""\n' + comment.trim() + '\n"""\n';
+    if (style === 'detailed' || line.includes(':param') || line.includes(':return')) {
+      return '"""\n' + line + '\n"""\n';
     }
-    return '# ' + comment.trim() + '\n';
+    return '# ' + line + '\n';
   }
 
   if (['css', 'scss', 'less', 'sass', 'stylus', 'postcss'].includes(language)) {
     if (style === 'detailed') {
-      return '/*\n * ' + comment.split('\n').join('\n * ') + '\n */\n';
+      return '/*\n * ' + line + '\n */\n';
     }
-    return '/* ' + comment.trim() + ' */\n';
+    return '/* ' + line + ' */\n';
   }
 
   if (['html', 'xml', 'svg', 'vue'].includes(language)) {
-    return '<!-- ' + comment.trim() + ' -->\n';
+    return '<!-- ' + line + ' -->\n';
   }
 
-  return '// ' + comment.trim() + '\n';
+  return '// ' + line + '\n';
+}
+
+/**
+ * 从 AI 返回的内容中提取纯注释部分，去掉混入的代码
+ * 防止 AI 在详细模式下把整段代码（含注释）一起返回
+ */
+/**
+ * 提取纯注释内容，去掉混入的后续代码
+ * 例如 AI 返回了 JSDoc + 函数体，只取 JSDoc 部分
+ */
+function extractCommentBlock(text, language) {
+  // 如果以 /* 开头，尝试找到闭合的 */
+  if (/^\/\*/.test(text)) {
+    const endIdx = text.indexOf('*/');
+    if (endIdx !== -1) {
+      const commentPart = text.slice(0, endIdx + 2);
+      const rest = text.slice(endIdx + 2).trim();
+      // 如果后面还有内容且不是纯注释，说明混入了代码
+      if (rest) {
+        return commentPart;
+      }
+    }
+  }
+
+  // 如果以 // 或 # 开头，检查是否每行都是注释
+  if (/^(\/\/|#)/m.test(text)) {
+    const lines = text.split('\n').filter(l => l.trim());
+    const allComments = lines.every(l => /^\s*(\/\/|#)/.test(l.trim()));
+    if (!allComments) {
+      // 只取注释行
+      return lines.filter(l => /^\s*(\/\/|#)/.test(l.trim())).join('\n');
+    }
+  }
+
+  return text;
+}
+
+function cleanCommentOnly(text) {
+  // 尝试提取第一个完整的注释块 /* ... */
+  const blockMatch = text.match(/\/\*[\s\S]*?\*\//);
+  if (blockMatch) {
+    // 检查是否只有注释块（没有后续代码再出现）
+    const after = text.slice(blockMatch.index + blockMatch[0].length).trim();
+    if (!after || /^\s*\/\//.test(after) || /^\s*\/\*/.test(after)) {
+      // 后面只有注释或空白，说明AI返回的是纯注释
+      return text;
+    }
+    // 后面有代码 → 只取第一个注释块
+    return blockMatch[0];
+  }
+
+  // 尝试提取单行注释集合 // ...
+  const lines = text.split('\n').filter(l => l.trim());
+  const commentLines = lines.filter(l => /^\s*(\/\/|#|<!--)/.test(l.trim()));
+  if (commentLines.length > 0 && commentLines.length === lines.length) {
+    return text; // 全部是注释行
+  }
+  if (commentLines.length > 0) {
+    return commentLines.join('\n'); // 只取注释行
+  }
+
+  return text;
 }
 
 function deactivate() {}
